@@ -1,0 +1,38 @@
+<html lang="es"> 
+<meta charset="UTF-8">
+<meta http-equiv="Content-Language" content="es">
+
+<h2>Productos</h2>
+{% if session['rol'] == 'admin' %}
+    <a href="/agregar_producto">Agregar Producto</a>
+{% endif %}
+
+<a href="/login">Login</a>
+<br><br>
+<table border="1">
+    <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Stock</th>
+        <th>Precio</th>
+        <th>Descripcion</th>
+        <th>Acciones</th>
+    </tr>
+    {% for producto in productos %}
+    <tr>
+        <td>{{ producto.id }}</td>
+        <td>{{ producto.nombre }}</td>
+        <td>{{ producto.stock }}</td>
+        <td>{{ producto.precio_user }}</td>
+        <td>{{ producto.descripcion }}</td>
+        <td>
+            {% if session['rol'] == 'admin' %}
+            <a href="/eliminar_producto/{{ producto.id }}">Eliminar</a>
+            {% endif %}
+            {% if session['rol'] == 'empleado' or session['rol']=='admin' %}
+            <a href="/editar_producto/{{ producto.id }}">Editar</a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
