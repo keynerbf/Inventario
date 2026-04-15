@@ -55,6 +55,56 @@ def logout():
     session.clear()
     return redirect("/")
 
+@app.route("/usuarios")
+def usuarios():
+    db = get_db()
+
+    if session.get('rol')=='admin':
+        usuarios = db.execute("""
+            SELECT * FROM usuarios
+        """).fetchall()
+    else:
+        usuarios = []
+
+    return render_template("usuarios.html", usuarios=usuarios)
+
+@app.route("/editar_usuario/<int:id>", methods=["GET", "POST"])
+def editar_usuario(id):
+    if session.get('rol') != "admin":
+        return redirect("/")
+
+    db = get_db()
+
+    if request.method == "POST":
+        documento = request.form["documento"]
+        nombre = request.form["nombre"]
+        apellido1 = request.form["apellido1"]
+        if apellido1=="":
+            apellido1="None"
+            
+        apellido2 = request.form["apellido2"]
+        if apellido2=="":
+            apellido2="None"
+            
+        estado = request.form["estado"]
+        if estado!="0":
+            estado=1
+
+        db.execute("""
+            UPDATE usuarios 
+            SET documento=?, nombre=?, apellido_1=?, apellido_2=?, activo=?
+            WHERE id=?
+        """, (documento, nombre, apellido1, apellido2, estado, id))
+
+        db.commit()
+        return redirect("/usuarios")
+
+    usuario = db.execute(
+        "SELECT * FROM usuarios WHERE id=?",
+        (id,)
+    ).fetchone()
+
+    return render_template("editar_usuario.html", usuario=usuario)            
 
 @app.route("/productos")
 def productos():
@@ -81,7 +131,6 @@ def productos():
         """).fetchall()
 
     return render_template("productos.html", productos=productos)
-
 
 @app.route("/agregar_producto", methods=["GET", "POST"])
 def agregar_producto():
@@ -141,7 +190,6 @@ def editar_producto(id):
     ).fetchone()
 
     return render_template("editar_producto.html", producto=producto)
-
 
 @app.route("/eliminar_producto/<int:id>")
 def eliminar_producto(id):

@@ -21,7 +21,7 @@
         <th>Stock</th>
         <th>Precio</th>
         <th>Descripcion</th>
-        {% if session['rol'] == 'admin' or session['rol'] == 'empleado' %}
+        {% if session['rol'] in ['admin','empleado'] %}
         <th>Estado</th>
         <th>Acciones</th>
         {% endif %}
