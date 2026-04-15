@@ -61,9 +61,24 @@ def productos():
     db = get_db()
 
     if session.get('rol') in ['admin', 'empleado']:
-        productos = db.execute("SELECT * FROM productos").fetchall()
+        productos = db.execute("""
+            SELECT *,
+            CASE 
+                WHEN activo = 1 THEN 'Disponible'
+                ELSE 'No disponible'
+            END AS estado
+            FROM productos
+        """).fetchall()
     else:
-        productos = db.execute("SELECT * FROM productos WHERE activo=1").fetchall()
+        productos = db.execute("""
+            SELECT *,
+            CASE 
+                WHEN activo = 1 THEN 'Disponible'
+                ELSE 'No disponible'
+            END AS estado
+            FROM productos
+            WHERE activo = 1 AND stock > 0
+        """).fetchall()
 
     return render_template("productos.html", productos=productos)
 
@@ -75,19 +90,23 @@ def agregar_producto():
 
     if session["rol"] != "admin":
         return "No autorizado"
-
+    
+    db = get_db()
+    
     if request.method == "POST":
         nombre = request.form["nombre"]
+        categoria = request.form["categoria"]
         stock = request.form["stock"]
-        precio = request.form["precio"]
+        precio_user = request.form["precio_user"]
+        precio_in = request.form["precio_in"]
+        descripcion = request.form["descripcion"]
 
-        db = get_db()
-        db.execute(
-            "INSERT INTO productos (nombre, stock, precio_user) VALUES (?, ?, ?)",
-            (nombre, stock, precio)
-        )
+        db.execute("""
+            INSERT INTO productos 
+            (nombre, categoria, stock, precio_user, precio_in, descripcion)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """, (nombre, categoria, stock, precio_user, precio_in, descripcion))
         db.commit()
-
         return redirect("/productos")
 
     return render_template("agregar_producto.html")
@@ -101,14 +120,19 @@ def editar_producto(id):
 
     if request.method == "POST":
         nombre = request.form["nombre"]
+        categoria = request.form["categoria"]
         stock = request.form["stock"]
+        precio_user = request.form["precio_user"]
+        precio_in = request.form["precio_in"]
+        descripcion = request.form["descripcion"]
 
-        db.execute(
-            "UPDATE productos SET nombre=?, stock=? WHERE id=?",
-            (nombre, stock, id)
-        )
+        db.execute("""
+            UPDATE productos 
+            SET nombre=?, categoria=?, stock=?, precio_user=?, precio_in=?, descripcion=?
+            WHERE id=?
+        """, (nombre, categoria, stock, precio_user, precio_in, descripcion, id))
+
         db.commit()
-
         return redirect("/productos")
 
     producto = db.execute(
@@ -117,6 +141,7 @@ def editar_producto(id):
     ).fetchone()
 
     return render_template("editar_producto.html", producto=producto)
+
 
 @app.route("/eliminar_producto/<int:id>")
 def eliminar_producto(id):

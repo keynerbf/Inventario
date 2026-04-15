@@ -7,32 +7,46 @@
     <a href="/agregar_producto">Agregar Producto</a>
 {% endif %}
 
-<a href="/login">Login</a>
+{% if session.get('user_id') %}
+    <a href="/logout">Cerrar sesión</a>
+{% else %}
+    <a href="/login">Login</a>
+{% endif %}
 <br><br>
 <table border="1">
     <tr>
         <th>ID</th>
         <th>Nombre</th>
+        <th>Categoria</th>
         <th>Stock</th>
         <th>Precio</th>
         <th>Descripcion</th>
+        {% if session['rol'] == 'admin' or session['rol'] == 'empleado' %}
+        <th>Estado</th>
         <th>Acciones</th>
+        {% endif %}
     </tr>
     {% for producto in productos %}
     <tr>
         <td>{{ producto.id }}</td>
         <td>{{ producto.nombre }}</td>
+        <td>{{ producto.categoria }}</td>
         <td>{{ producto.stock }}</td>
         <td>{{ producto.precio_user }}</td>
         <td>{{ producto.descripcion }}</td>
+        {% if session['rol'] == 'admin' or session['rol'] == 'empleado' %}
+        <td>{% if producto.activo == 1 %}Disponible{% else %}No disponible{% endif %}</td>
+        {% endif %}
+        {% if session['rol'] == 'empleado' or session['rol']=='admin' %}
         <td>
             {% if session['rol'] == 'admin' %}
             <a href="/eliminar_producto/{{ producto.id }}">Eliminar</a>
             {% endif %}
             {% if session['rol'] == 'empleado' or session['rol']=='admin' %}
             <a href="/editar_producto/{{ producto.id }}">Editar</a>
-            {% endif %}
         </td>
+        {% endif %}
+        {% endif %}
+        {% endfor %}
     </tr>
-    {% endfor %}
 </table>

@@ -4,8 +4,29 @@
 <h2>Agregar Producto</h2>
 
 <form method="POST">
-    <input name="nombre" placeholder="Nombre"><br><br>
-    <input name="stock" type="number" placeholder="Stock"><br><br>
-    <input name="precio" type="number" placeholder="Precio"><br><br>
-    <button type="submit">Guardar</button>
+    <label>Nombre:</label><br>
+    <input type="text" name="nombre" value="{{nombre }}" required>
+    <br><br>
+
+    <label>Categoría:</label><br>
+    <input type="text" name="categoria" value="{{ categoria }}">
+    <br><br>
+
+    <label>Stock:</label><br>
+    <input type="number" name="stock" value="{{ stock }}" required>
+    <br><br>
+
+    <label>Precio usuario:</label><br>
+    <input type="number" name="precio_user" value="{{ precio_user }}" required>
+    <br><br>
+
+    <label>Precio compra:</label><br>
+    <input type="number" name="precio_in" value="{{ precio_in }}">
+    <br><br>
+
+    <label>Descripción:</label><br>
+    <textarea name="descripcion">{{ descripcion }}</textarea>
+    <br><br>
+
+    <button type="submit">Guardar cambios</button>
 </form>
