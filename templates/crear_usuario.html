@@ -1,0 +1,29 @@
+<html lang="es">
+<meta charset="UTF-8">
+<meta http-equiv="Content-Language" content="es">
+<h2>Agregar Producto</h2>
+
+<form method="POST">
+
+    <label>Documento:</label><br>
+    <input type="text" name="documento" value="{{ documento }}" required>
+    <br><br>
+
+    <label>Nombre:</label><br>
+    <input type="text" name="nombre" value="{{ nombre }}" required>
+    <br><br>
+
+    <label>Apellido 1:</label><br>
+    <input type="text" name="apellido_1" value="{{ apellido_1 }}">
+    <br><br>
+
+    <label>Apellido 2:</label><br>
+    <input type="text" name="apellido_2" value="{{ apellido_2 }}">
+    <br><br>
+
+    <label>Password:</label><br>
+    <input type="password" name="password" value="{{ password }}" required>
+    <br><br>
+
+    <button type="submit">Guardar cambios</button>
+</form>

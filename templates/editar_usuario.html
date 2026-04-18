@@ -19,15 +19,18 @@
     <br><br>
 
     <label>Apellido 1:</label><br>
-    <input type="text" name="apellido1" value="{{ usuario.apellido_1 }}">
+    <input type="text" name="apellido_1" value="{{ usuario.apellido_1 }}">
     <br><br>
 
     <label>Apellido 2:</label><br>
-    <input type="text" name="apellido2" value="{{ usuario.apellido_2 }}">
+    <input type="text" name="apellido_2" value="{{ usuario.apellido_2 }}">
     <br><br>
 
     <label>Estado:</label><br>
-    <input type="number" name="estado" value="1" value="{{ usuario.activo }}" required>
+    <select name="estado">
+        <option value="1" {% if usuario.estado == 1 %}selected{% endif %}>Activo</option>
+        <option value="0" {% if usuario.estado == 0 %}selected{% endif %}>Inactivo</option>
+    </select>
     <br><br>
 
 

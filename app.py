@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, session
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 
 app = Flask(__name__)
@@ -10,20 +11,19 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        documento = request.form["documento"]
-        password = request.form["password"]
+        documento = request.form["documento"].strip()
+        password = request.form["password"].strip()
 
         db = get_db()
         user = db.execute(
-            "SELECT * FROM usuarios WHERE documento = ? AND activo = 1",
+            "SELECT * FROM usuarios WHERE documento = ? AND estado = 1",
             (documento,)
         ).fetchone()
 
-        if user and user["password"] == password:
+        if user and check_password_hash(user["password"], password):
             session["user_id"] = user["id"]
             session["nombre"] = user['nombre']
             session["rol"] = user["rol"]
@@ -33,7 +33,6 @@ def login():
             return "Credenciales incorrectas"
 
     return render_template("login.html")
-
 
 @app.route("/")
 def dashboard():
@@ -48,7 +47,6 @@ def bienvenida():
         return redirect("/login")
 
     return render_template("bienvenida.html")
-
 
 @app.route("/logout")
 def logout():
@@ -76,25 +74,17 @@ def editar_usuario(id):
     db = get_db()
 
     if request.method == "POST":
-        documento = request.form["documento"]
-        nombre = request.form["nombre"]
-        apellido1 = request.form["apellido1"]
-        if apellido1=="":
-            apellido1="None"
-            
-        apellido2 = request.form["apellido2"]
-        if apellido2=="":
-            apellido2="None"
-            
-        estado = request.form["estado"]
-        if estado!="0":
-            estado=1
+        documento = request.form["documento"].strip()
+        nombre = request.form["nombre"].strip()
+        apellido_1 = request.form["apellido_1"].strip() or None
+        apellido_2 = request.form["apellido_2"].strip() or None
+        estado = int(request.form.get("estado", 1))
 
         db.execute("""
             UPDATE usuarios 
-            SET documento=?, nombre=?, apellido_1=?, apellido_2=?, activo=?
+            SET documento=?, nombre=?, apellido_1=?, apellido_2=?, estado=?
             WHERE id=?
-        """, (documento, nombre, apellido1, apellido2, estado, id))
+        """, (documento, nombre, apellido_1, apellido_2, estado, id))
 
         db.commit()
         return redirect("/usuarios")
@@ -106,6 +96,42 @@ def editar_usuario(id):
 
     return render_template("editar_usuario.html", usuario=usuario)            
 
+@app.route("/crear_usuario", methods=["GET", "POST"])
+def crear_usuario():
+    if session.get('rol') != "admin":
+        return redirect("/")
+    
+    db = get_db()
+    if request.method == "POST":
+        documento = request.form["documento"].strip()
+        nombre = request.form["nombre"].strip()
+        apellido_1 = request.form["apellido_1"].strip() or None
+        apellido_2 = request.form["apellido_2"].strip() or None
+        password = generate_password_hash(request.form["password"])
+
+        db.execute("""
+            INSERT INTO usuarios 
+            (documento, nombre, apellido_1, apellido_2, password, rol)
+            VALUES (?, ?, ?, ?, ?, 'empleado')
+        """, (documento, nombre, apellido_1, apellido_2, password))
+        db.commit()
+        return redirect("/usuarios")
+    return render_template("crear_usuario.html")
+
+@app.route("/eliminar_usuario/<int:id>")
+def eliminar_usuario(id):
+    if "user_id" not in session:
+        return redirect("/")
+
+    if session["rol"] != "admin":
+        return "No autorizado"
+
+    db = get_db()
+    db.execute("UPDATE usuarios SET estado = 1 - estado WHERE id = ?", (id,))
+    db.commit()
+
+    return redirect("/usuarios")
+
 @app.route("/productos")
 def productos():
     db = get_db()
@@ -114,7 +140,7 @@ def productos():
         productos = db.execute("""
             SELECT *,
             CASE 
-                WHEN activo = 1 THEN 'Disponible'
+                WHEN estado = 1 THEN 'Disponible'
                 ELSE 'No disponible'
             END AS estado
             FROM productos
@@ -123,11 +149,11 @@ def productos():
         productos = db.execute("""
             SELECT *,
             CASE 
-                WHEN activo = 1 THEN 'Disponible'
+                WHEN estado = 1 THEN 'Disponible'
                 ELSE 'No disponible'
             END AS estado
             FROM productos
-            WHERE activo = 1 AND stock > 0
+            WHERE estado = 1 AND stock > 0
         """).fetchall()
 
     return render_template("productos.html", productos=productos)
@@ -143,8 +169,8 @@ def agregar_producto():
     db = get_db()
     
     if request.method == "POST":
-        nombre = request.form["nombre"]
-        categoria = request.form["categoria"]
+        nombre = request.form["nombre"].strip()
+        categoria = request.form["categoria"].strip()
         stock = request.form["stock"]
         precio_user = request.form["precio_user"]
         precio_in = request.form["precio_in"]
@@ -168,12 +194,12 @@ def editar_producto(id):
     db = get_db()
 
     if request.method == "POST":
-        nombre = request.form["nombre"]
-        categoria = request.form["categoria"]
+        nombre = request.form["nombre"].strip()
+        categoria = request.form["categoria"].strip()
         stock = request.form["stock"]
         precio_user = request.form["precio_user"]
         precio_in = request.form["precio_in"]
-        descripcion = request.form["descripcion"]
+        descripcion = request.form.get("descripcion") or None
 
         db.execute("""
             UPDATE productos 
@@ -200,7 +226,7 @@ def eliminar_producto(id):
         return "No autorizado"
 
     db = get_db()
-    db.execute("UPDATE productos SET activo=0 WHERE id=?", (id,))
+    db.execute("UPDATE productos SET estado = 1 - estado WHERE id = ?", (id,))
     db.commit()
 
     return redirect("/productos")

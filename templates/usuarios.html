@@ -1,5 +1,12 @@
+{% include 'menu.html' %}
+
+<h2>Usuarios</h2>
 {% if session.get('user_id') %}
     <a href="/logout">Cerrar sesión</a>
+{% endif %}
+
+{% if session.get('rol') == 'admin' %}
+    <a href="/crear_usuario">Crear Usuario</a>
 {% endif %}
 <br><br>
 <table border="1">
@@ -15,18 +22,22 @@
         
     </tr>
     {% for usuario in usuarios %}
-    <tr>
+    {% if usuario.estado == 0%}
+        <tr style="background-color: red;">
+        {% else %}
+            <tr>
+    {% endif %}
         <td>{{ usuario.id }}</td>
         <td>{{ usuario.documento }}</td>
         <td>{{ usuario.nombre }}</td>
         <td>{{ usuario.apellido_1 }}</td>
         <td>{{ usuario.apellido_2 }}</td>
         <td>{{ usuario.rol }}</td>
-        <td>{% if usuario.activo == 1 %}Activo{% else %}Inactivo{% endif %}</td>
+        <td>{% if usuario.estado == 1 %}Activo{% else %}Inactivo{% endif %}</td>
         <td>
             <a href="/editar_usuario/{{ usuario.id }}">Editar</a>
             {% if usuario.rol != 'admin' %}
-            <a href="/eliminar_usuario/{{ usuario.id }}">Eliminar</a>
+            <a href="/eliminar_usuario/{{ usuario.id }}">{% if usuario.estado == 1 %}Ocultar{% else %}Activar{% endif %}</a>
             {% endif %}
         </td>
     </tr>

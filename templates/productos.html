@@ -2,6 +2,8 @@
 <meta charset="UTF-8">
 <meta http-equiv="Content-Language" content="es">
 
+{% include 'menu.html' %}
+
 <h2>Productos</h2>
 {% if session['rol'] == 'admin' %}
     <a href="/agregar_producto">Agregar Producto</a>
@@ -27,26 +29,37 @@
         {% endif %}
     </tr>
     {% for producto in productos %}
-    <tr>
+
+    {% if producto.estado == 0%}
+        <tr style="background-color: red;">
+        {% else %}
+            <tr>
+    {% endif %}
         <td>{{ producto.id }}</td>
         <td>{{ producto.nombre }}</td>
         <td>{{ producto.categoria }}</td>
         <td>{{ producto.stock }}</td>
         <td>{{ producto.precio_user }}</td>
         <td>{{ producto.descripcion }}</td>
+
         {% if session['rol'] == 'admin' or session['rol'] == 'empleado' %}
-        <td>{% if producto.activo == 1 %}Disponible{% else %}No disponible{% endif %}</td>
+        <td>{% if producto.estado == 1 %}Disponible{% else %}No disponible{% endif %}</td>
         {% endif %}
+
         {% if session['rol'] == 'empleado' or session['rol']=='admin' %}
         <td>
             {% if session['rol'] == 'admin' %}
-            <a href="/eliminar_producto/{{ producto.id }}">Eliminar</a>
+            <a href="/eliminar_producto/{{ producto.id }}">
+                {% if producto.estado == 1 %}Ocultar{% else %}Activar{% endif %}
+            </a>
+            
             {% endif %}
             {% if session['rol'] == 'empleado' or session['rol']=='admin' %}
             <a href="/editar_producto/{{ producto.id }}">Editar</a>
         </td>
         {% endif %}
         {% endif %}
+
         {% endfor %}
     </tr>
 </table>
